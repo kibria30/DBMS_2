@@ -7,46 +7,39 @@ def process_transactions(logs):
         
         if 'CKPT' in parts[0]:
             checkpoint_reached = True
-        
         elif parts[0] == 'COMMIT' and checkpoint_reached:
-            transaction_status['action'].append('Ignore')
+            transaction_status['action'].append('ignore')
             transaction_status['transaction'].append(parts[1])
         elif parts[0] == 'COMMIT':
-            transaction_status['action'].append('Redo')
+            transaction_status['action'].append('redo')
             transaction_status['transaction'].append(parts[1])
-        
-        # Handle started transactions that are not already recorded
         elif parts[0] == 'START' and parts[1] not in transaction_status['transaction']:
-            transaction_status['action'].append('Undo')
+            transaction_status['action'].append('undo')
             transaction_status['transaction'].append(parts[1])
 
     return transaction_status
 
-# Function to determine the final variable values based on transactions
 def process_variable_values(logs, transaction_status):
     final_values = {'variable': [], 'value': []}
 
     for entry in logs:
         parts = entry[1:-1].split(' ')
         
-        # Skip entries that don't have update information (like <START>, <COMMIT>, etc.)
         if len(parts) != 4 or parts[1] in final_values['variable']:
             continue
         
-        # Find the corresponding transaction and its action (redo/undo/ignore)
         if parts[0] in transaction_status['transaction']:
             index = transaction_status['transaction'].index(parts[0])
         else:
             continue
         
-        # Based on the action, use either the old value or the new value
-        if transaction_status['action'][index] == 'Redo':
+        if transaction_status['action'][index] == 'redo':
             final_values['variable'].append(parts[1])
             final_values['value'].append(parts[3])
-        elif transaction_status['action'][index] == 'Undo':
+        elif transaction_status['action'][index] == 'undo':
             final_values['variable'].append(parts[1])
             final_values['value'].append(parts[2])
-        elif transaction_status['action'][index] == 'Ignore':
+        elif transaction_status['action'][index] == 'ignore':
             final_values['variable'].append(parts[1])
             final_values['value'].append(parts[3])
 
@@ -59,7 +52,7 @@ def main():
     transaction_status = process_transactions(logs)
 
     for i in range(len(transaction_status['action'])):
-        print(f"{transaction_status['action'][i]}: {transaction_status['transaction'][i]}")
+        print(f"{transaction_status['action'][i]} - {transaction_status['transaction'][i]}")
     
     final_values = process_variable_values(logs, transaction_status)
 
