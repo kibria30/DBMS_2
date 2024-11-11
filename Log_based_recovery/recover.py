@@ -46,7 +46,7 @@ def process_variable_values(logs, transaction_status):
     return final_values
 
 def main():
-    with open("logs.txt", 'r') as file:
+    with open("log.txt", 'r') as file:
         logs = file.read().splitlines()
     
     transaction_status = process_transactions(logs)
