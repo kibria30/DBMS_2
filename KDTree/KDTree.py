@@ -4,7 +4,7 @@ from sklearn.datasets import load_iris
 class KDTree:
     def __init__(self, points, depth=0):
         self.depth = depth
-        self.k = points.shape[1]  # Number of dimensions
+        self.k = points.shape[1]
         self.node = None
         self.left = None
         self.right = None
@@ -36,17 +36,16 @@ class KDTree:
             best, best_dist = other_branch.nearest_neighbor(point, best, best_dist)
 
         return best, best_dist
+    
+
 
 if __name__ == "__main__":
-    # Load Iris dataset
     iris = load_iris()
-    data = iris.data  # Only use features, not target labels
+    data = iris.data
 
-    # Build KD-Tree
     kd_tree = KDTree(data)
 
-    # Test nearest neighbor search
-    test_point = np.array([5.0, 3.0, 1.4, 0.2])  # Example point
+    test_point = np.array([5.0, 3.0, 1.4, 0.2])
     nearest, distance = kd_tree.nearest_neighbor(test_point)
     print("Test Point:", test_point)
     print("Nearest Point:", nearest)

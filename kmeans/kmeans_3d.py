@@ -12,7 +12,6 @@ class KMeans:
         self.history = []
         
     def fit(self, X: np.ndarray) -> np.ndarray:
-        # Randomly initialize centroids
         idx = np.random.choice(len(X), self.k, replace=False)
         self.centroids = X[idx]
         
@@ -20,10 +19,10 @@ class KMeans:
             self.history.append(self.centroids.copy())
             
             # Assign points to nearest centroid
-            distances = np.sqrt(((X - self.centroids[:, np.newaxis])**2).sum(axis=2))
+            # distances = np.sqrt(((X - self.centroids[:, np.newaxis])**2).sum(axis=2))
+            distances = self.compute_distances(X, self.centroids)
             labels = np.argmin(distances, axis=0)
             
-            # Update centroids
             new_centroids = np.array([X[labels == k].mean(axis=0) for k in range(self.k)])
             
             if np.all(self.centroids == new_centroids):
@@ -32,8 +31,22 @@ class KMeans:
             self.centroids = new_centroids
             
         return labels
+        
+    def compute_distances(self, X: np.ndarray, centroids: np.ndarray) -> np.ndarray:
+        centroids_expanded = centroids[:, np.newaxis]
 
-def visualize_3d_clustering(img_path: str, sample_size: int = 1000):
+        squared_diff = (X - centroids_expanded) ** 2
+        sum_squared_diff = np.sum(squared_diff, axis=2)
+
+        distances = np.sqrt(sum_squared_diff)
+        
+        return distances
+
+
+
+
+
+def visualize_3d_clustering(img_path: str, k: int = 2, sample_size: int = 1000):
     img = cv2.imread(img_path)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     pixels = img.reshape(-1, 3)
@@ -41,12 +54,11 @@ def visualize_3d_clustering(img_path: str, sample_size: int = 1000):
     indices = np.random.choice(len(pixels), sample_size, replace=False)
     sampled_pixels = pixels[indices]
     
-    kmeans = KMeans(k=2)
+    kmeans = KMeans(k=k)
     labels = kmeans.fit(sampled_pixels)
     
     fig = plt.figure(figsize=(15, 5))
     
-    # Original points
     ax1 = fig.add_subplot(131, projection='3d')
     ax1.scatter(sampled_pixels[:, 0], sampled_pixels[:, 1], sampled_pixels[:, 2], 
                 c=sampled_pixels/255, marker='o', s=20)
@@ -55,7 +67,6 @@ def visualize_3d_clustering(img_path: str, sample_size: int = 1000):
     ax1.set_ylabel('Green')
     ax1.set_zlabel('Blue')
     
-    # Points with final clusters - Updated order and zorder
     ax2 = fig.add_subplot(132, projection='3d')
     scatter = ax2.scatter(sampled_pixels[:, 0], sampled_pixels[:, 1], sampled_pixels[:, 2], 
                          c=labels, cmap='viridis', marker='o', s=20, zorder=1)
@@ -70,7 +81,6 @@ def visualize_3d_clustering(img_path: str, sample_size: int = 1000):
     plt.show()
 
 def detect_skin(image_path: str, k: int = 2) -> Tuple[np.ndarray, List[np.ndarray]]:
-    # Previous implementation remains the same
     img = cv2.imread(image_path)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     pixels = img.reshape(-1, 3)
@@ -97,9 +107,8 @@ def detect_skin(image_path: str, k: int = 2) -> Tuple[np.ndarray, List[np.ndarra
     
     return skin_mask, clusters
 
-def visualize_results(img_path: str):
-    # Previous implementation remains the same
-    skin_mask, clusters = detect_skin(img_path)
+def visualize_results(img_path: str, k: int = 2):
+    skin_mask, clusters = detect_skin(img_path, k)
     img = cv2.imread(img_path)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     skin_detected = img.copy()
@@ -125,28 +134,19 @@ def visualize_results(img_path: str):
     plt.tight_layout()
     plt.show()
     
-    # Show 3D clustering visualization
-    
 
-# Usage
-# visualize_3d_clustering("2hand.jpeg")
-# visualize_results('2hand.jpeg')
 
-import multiprocessing
 from multiprocessing import Process
 
-def run_visualizations_multiprocess(image_path: str):
+def run_visualizations_multiprocess(image_path: str, k: int = 2):
     """Run visualizations using multiple processes"""
-    # Create processes
-    p1 = Process(target=visualize_3d_clustering, args=(image_path,))
-    p2 = Process(target=visualize_results, args=(image_path,))
+    p1 = Process(target=visualize_3d_clustering, args=(image_path,k))
+    p2 = Process(target=visualize_results, args=(image_path,k))
     
-    # Start processes
     p1.start()
     p2.start()
     
-    # Wait for both to complete
     p1.join()
     p2.join()
 
-run_visualizations_multiprocess("2hand.jpeg")
+run_visualizations_multiprocess("2hand.jpeg", 2)

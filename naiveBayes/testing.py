@@ -10,8 +10,6 @@ trained_value = np.zeros(shape=(256,256,256))
 new_img = np.empty(shape=(256, 256, 256), dtype=int).fill(0)
 new_img = imageio.v2.imread(input_img)
 
-#fp = open('output2.txt', 'r')
-
 for i in range(256):
     for j in range(256):
         for k in range(256):
@@ -29,7 +27,6 @@ for x in range(height):
         blue = new_img[x, y, 2]
 
         if (trained_value[red,green,blue] <= T):
-            # image without skin is covered with WHITE
             new_img[x, y, 0] = 255
             new_img[x, y, 1] = 255
             new_img[x, y, 2] = 255
